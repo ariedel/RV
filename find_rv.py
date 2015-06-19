@@ -372,7 +372,7 @@ def radial_velocity(wv_obj,fx_obj,sig_obj,wv_std,fx_std,sig_std,obj_name,std_nam
             # if ier < 5:
             pix_shift[l] = mean
             # I'm calculating the vsini now because I need errors, and the vsini calculation is not linear.
-            pix_width[l] = vsinicoeff[0] + vsinicoeff[1] * sig + vsinicoeff[2] * sig**2 + vsinicoeff[3] * sig**3 + vsinicoeff[4] * sig**4
+            #pix_width[l] = vsinicoeff[0] + vsinicoeff[1] * sig + vsinicoeff[2] * sig**2 + vsinicoeff[3] * sig**3 + vsinicoeff[4] * sig**4
 
 # End cross correlation loop --------------------------------- 
 
@@ -400,13 +400,13 @@ def radial_velocity(wv_obj,fx_obj,sig_obj,wv_std,fx_std,sig_std,obj_name,std_nam
             print cutstart,cutend
             pix_shift = pix_shift[np.where((pix_shift > np.float(cutstart)) & (pix_shift < np.float(cutend)))]
 
-        # 4b. Compute the mean pixel shift and pixel shift uncertainty.
+        # 4b. Compute the mean pixel shift (rv value) and pixel shift uncertainty (RV uncertainty).
         
         mu = np.mean(pix_shift)
         sigma = np.std(pix_shift,ddof=1)
 
-        vsini = np.mean(pix_width)
-        vsini_err = np.std(pix_width,ddof=1)
+        #vsini = np.mean(pix_width)
+        #vsini_err = np.std(pix_width,ddof=1)
 
         #axh = figv.add_subplot(212)
 	#n, bins, patches=axh.hist(pix_width,bins=30,normed=1.0,facecolor='green',align='mid')
@@ -485,5 +485,5 @@ def radial_velocity(wv_obj,fx_obj,sig_obj,wv_std,fx_std,sig_std,obj_name,std_nam
 	#plt.hist(pix_shift)
 	
 #END RADIAL VELOCITY FUNCTION -----------------------------------------
-	return rv_meas,rv_meas_err,vsini,vsini_err
+	return rv_meas,rv_meas_err
 	
