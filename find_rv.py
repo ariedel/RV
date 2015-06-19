@@ -351,8 +351,9 @@ def radial_velocity(wv_obj,fx_obj,sig_obj,wv_std,fx_std,sig_std,obj_name,std_nam
             
             amp = np.exp(lnamp)
             
-            print_num=l%500		#prints data every 200 fits
+            print_num=l%500		#prints data every 500 fits. Sort of a progress meter.
             if print_num == 0:
+                ## Uncomment the following to make a plot every 500 fits.
                 #fig = plt.figure(l)
                 #ax = fig.add_subplot(111)
                 #my_gauss = (amp * (np.exp(-0.5 * ((xcorr1 - mean) ** 2) / sig**2))) + sky + sky2 * xcorr1
@@ -375,78 +376,54 @@ def radial_velocity(wv_obj,fx_obj,sig_obj,wv_std,fx_std,sig_std,obj_name,std_nam
 
 # End cross correlation loop --------------------------------- 
 
-        fig = plt.figure(2)
-        ax = fig.add_subplot(111)
-        ax.plot(xcorr,ycorr,'k')
-        figname='rv_{0:}_{1:}_{2:}_xcorr.png'.format(std_name,obj_name,order)
-        fig.savefig(figname)
-        fig.clf()
-        plt.close()
-	#print len(ycorr)	
-	#print pix_shift
+        # 4. Find the RV
+        # All 5000 rv fits have been calculated and stored in arrays
+        # 4a. Cut out outlier RVs. Useful if the cross-correlation produces occasional bad results. Use cutstart and cutend to force the code to only fit a gaussian to a certain region. Don't over-use this to force the result you want, though.
+        # 4b. Compute the mean pixel shift and pixel shift uncertainty.
+        # 4c. Convert pixel shift into RV
+        # 4d. Shift the wavelength array appropriately - all lines should now line up.
 
-	#pix_shift=np.array(pix_shift)
-	#(mu,sigma)=norm.fit(pix_shift)	# get mean and std dev of array of pixel shift values
-        # Running time = 0.286 seconds
+        ## Uncomment this to print out an example cross-correlation diagram
+        #fig = plt.figure(2)
+        #ax = fig.add_subplot(111)
+        #ax.plot(xcorr,ycorr,'k')
+        #figname='rv_{0:}_{1:}_{2:}_xcorr.png'.format(std_name,obj_name,order)
+        #fig.savefig(figname)
+        #fig.clf()
+        #plt.close()
 
-        pix_shift2 = np.copy(pix_shift)
+        # Turn the list of pixel shifts into a numpy array
+        pix_shift = np.asarray(pix_shift)
 
-        # cut the outliers from the pixel shift
+        # 4a. Cut out outliers from the pixel shift
         if cut == 1:
             print cutstart,cutend
-            pix_shift2 = pix_shift2[np.where(pix_shift2 > np.float(cutstart))]
-            pix_shift2 = pix_shift2[np.where(pix_shift2 < np.float(cutend))]
+            pix_shift = pix_shift[np.where((pix_shift > np.float(cutstart)) & (pix_shift < np.float(cutend)))]
 
-        #print len(pix_shift),len(pix_shift2),pix_shift
-
-        mu = np.mean(pix_shift2)
-        sigma = np.std(pix_shift2,ddof=1)
+        # 4b. Compute the mean pixel shift and pixel shift uncertainty.
+        
+        mu = np.mean(pix_shift)
+        sigma = np.std(pix_shift,ddof=1)
 
         vsini = np.mean(pix_width)
         vsini_err = np.std(pix_width,ddof=1)
 
-        axh = figv.add_subplot(212)
-	n, bins, patches=axh.hist(pix_width,bins=30,normed=1.0,facecolor='green',align='mid')
-        figv.savefig('vsiniplot.png')
-        plt.clf()
-        plt.close()
+        #axh = figv.add_subplot(212)
+	#n, bins, patches=axh.hist(pix_width,bins=30,normed=1.0,facecolor='green',align='mid')
+        #figv.savefig('vsiniplot.png')
+        #plt.clf()
+        #plt.close()
         
-        # Running time =
+        # 4c. Transform pixel shift to shift in radial velocity
 
-# Transform pixel shift to shift in radial velocity -------------------------------- 
-
-        # AR 2013.0423: The actually appropriate method requires a speed-of-light correction
-	#rv_meas=pix_to_kms*mu # AR 2012.1018: no longer NIRSPEC specific
-	#rv_meas_err=pix_to_kms*sigma # AR 2012.1018: no longer NIRSPEC specific
-	#print "vshift=",rv_meas
+        # AR 2013.0423: The actually appropriate method requires a speed-of-light correction. This works for both angstroms and microns.
         rv_meas = (2.99792458*10**5 * mu)/acoef_std
         rv_meas_err = (2.99792458*10**5 * sigma)/acoef_std
 
-# Apply shift to arrays --------------------------------
-# AR 2013.0423: This is a terrible way to do it.  Instead, we will shift THE WAVELENGTH ARRAY in the same fashion as a heliocentric radial velocity correction.
-#	
-#	fx_rebin_list_obj=fx_reg_temp_obj.tolist()
-#	fx_rebin_list_std=fx_reg_temp_std.tolist()
-#	#	print 'mu=',mu
-#	if mu >= 0:
-#		val= abs(mu)	# so we can shift properly
-#		i=0
-#		while i < val:
-#			del fx_rebin_list_obj[0]
-#			fx_rebin_list_obj.append(1)
-#			i=i+1
-#		print 'mu is negative'		
-#	elif mu < 0:
-#		val=mu
-#		i=0
-#		while i < val:
-#			del fx_rebin_list_std[0]	
-#			fx_rebin_list_std.append(1)
-#			i=i+1
-#			#	print 'mu=',mu		
+        # 4d. Apply shift to arrays
         wv_rvcorr_obj=wv_arr_std * (1 - rv_meas/(2.99792458*10**5))
 
-## Create plots --------------------------------- 
+        ## 5. Create plots --------------------------------- 
 # Plot object and standard so you can clearly see that shift exists --------------------------------
 	fig = plt.figure(1)
 	
@@ -491,10 +468,10 @@ def radial_velocity(wv_obj,fx_obj,sig_obj,wv_std,fx_std,sig_std,obj_name,std_nam
 	ax3.set_ylabel('frequency (normalized)')
 	rad='RV = %.3f +/- %.3f' %(rv_meas,rv_meas_err)
         corr = 'RV (corr) = %.3f +/- %.3f' %(rv_std + rv_meas, (rv_std_err**2 + rv_meas_err**2)**(0.5))
-        vsinistr = 'VsinI = %.3f +/- %.3f' % (vsini,vsini_err)
+        #vsinistr = 'VsinI = %.3f +/- %.3f' % (vsini,vsini_err)
 	ax3.annotate(rad,xy=(.66,.9),xycoords='axes fraction',xytext=(.66,.9),textcoords='axes fraction',color='black')
 	ax3.annotate(corr,xy=(.6,.8),xycoords='axes fraction',xytext=(.60,.8),textcoords='axes fraction',color='black')
-        ax3.annotate(vsinistr,xy=(.6,.6),xycoords='axes fraction',xytext=(.60,.6),textcoords='axes fraction',color='black')
+        #ax3.annotate(vsinistr,xy=(.6,.6),xycoords='axes fraction',xytext=(.60,.6),textcoords='axes fraction',color='black')
 	ax3.annotate('{0:+5.2f} {1: 5.2f}'.format(mu,sigma),xy=(.05,.9),xycoords='axes fraction',xytext=(.05,.9),textcoords='axes fraction',color='black')
 	ax3.annotate('{0:5.3f} km/s/pix'.format((2.99792458*10**5)/acoef_std),xy=(.05,.8),xycoords='axes fraction',xytext=(.05,.8),textcoords='axes fraction',color='black')
 	fig.subplots_adjust(hspace=.3)
