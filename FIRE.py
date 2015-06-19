@@ -147,8 +147,6 @@ def main(argv=None):
         tobj_flux = obj_flux[split]
         tobj_unc = obj_unc[split]
 
-        for 
-        
 
         rv_meas,rv_meas_err=find_rv.radial_velocity(numpy.asarray(tobj_wave),numpy.asarray(tobj_flux),numpy.asarray(tobj_unc),numpy.asarray(tstd_wave),numpy.asarray(tstd_flux),numpy.asarray(tstd_unc),starname_obj,starname_std,rv_std,rv_std_err,obj_order,xcorr_width,cut,cutstart,cutend)
 
