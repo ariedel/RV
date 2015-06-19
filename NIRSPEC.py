@@ -2,7 +2,7 @@ import math
 import numpy
 import scipy
 import random
-import find_rv_vsini
+import find_rv
 from astrolibpy.astrolib import baryvel
 from astropy.io import ascii
 from astropy.io import fits
