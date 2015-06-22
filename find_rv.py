@@ -303,7 +303,7 @@ n_iter = 1000
             
             amp = np.exp(lnamp)
             
-            print_num=l%500		#prints data every 500 fits. Sort of a progress meter.
+            print_num=l%np.floor(n_iter/10)		#prints data five times during calculation. Sort of a progress meter.
             if print_num == 0:
                 ## Uncomment the following to make a plot every 500 fits.
                 #fig = plt.figure(l)
