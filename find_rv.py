@@ -66,8 +66,8 @@ def lsf_rotate(deltav,vsini,epsilon=None,velgrid=None):
 
 def radial_velocity(wv_obj,fx_obj,sig_obj,wv_std,fx_std,sig_std,obj_name,std_name,rv_std,rv_std_err,order,xcorr_width,cut,cutstart,cutend):
 
-# The more random iterations, the better... but it takes longer
-n_iter = 1000
+    # The more random iterations, the better... but it takes longer
+    n_iter = 1000
 
 # Step 1: Fix the spectra:
 # * Select only the region in which they overlap
