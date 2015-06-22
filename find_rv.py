@@ -64,58 +64,10 @@ def lsf_rotate(deltav,vsini,epsilon=None,velgrid=None):
 
     return (e1*np.sqrt(x1) + e2*x1)/e3
 
-def vsini_show(wv_obj,fx_obj,sig_obj,wv_std,fx_std,sig_std,name):
-    # Find where standard and object overlap ---------------
-	wv_min = max([min(wv_std),min(wv_obj)])
-	wv_max = min([max(wv_std),max(wv_obj)])
-
-	n_pix_std = len(wv_std)
-
-	acoef_std = (n_pix_std*10 -1)/(math.log(wv_max) - math.log(wv_min))
-	bcoef_std = (n_pix_std*10) - (acoef_std * math.log(wv_max))
-
-	arr = np.arange(n_pix_std*10)+1
-	wv_ln_std = np.exp((arr - bcoef_std)/acoef_std)
-	
-# Interpolate data onto same ln wavelength scale -------------------------------
-
-	fx_interp_std = np.interp(wv_ln_std, wv_std, fx_std) 
-	fx_interp_obj = np.interp(wv_ln_std, wv_obj, fx_obj)
-	sig_interp_std = np.interp(wv_ln_std, wv_std, sig_std) # AR 2012.1018 Also need to rebin sig
-	sig_interp_obj = np.interp(wv_ln_std, wv_obj, sig_obj) # AR 2012.1018 Also need to rebin sig
-
-# Rebin Data ----------------------------
-
-	wv_arr_std=np.asarray(wv_ln_std,dtype=float)
-	fx_arr_obj=np.asarray(fx_interp_obj,dtype=float)
-	fx_arr_std=np.asarray(fx_interp_std,dtype=float)
-	sig_arr_obj=np.asarray(sig_interp_obj,dtype=float)
-	sig_arr_std=np.asarray(sig_interp_std,dtype=float)
-	
-        datalen = len(fx_arr_obj)
-        pix_scale = (2.99792458*10**5)/acoef_std
-
-        fig = plt.figure(2)
-        ax1 = fig.add_subplot(111)
-        fx_arr_obj = fx_arr_obj / np.mean(fx_arr_obj)
-        ax1.plot(wv_arr_std,fx_arr_obj,'k')
-        ax1.plot(wv_arr_std,fx_arr_std+2,'k')
-        vsini = [10,20,30,40,50]
-        for i in vsini:
-            print('alive')
-            kernel = lsf_rotate(pix_scale,i)
-            convolve = np.correlate(fx_arr_obj,kernel,mode='same')
-            convolve = convolve / np.mean(convolve)
-            resid = fx_arr_obj - convolve
-            ax1.plot(wv_arr_std,convolve+i/30.0,label='{0:} km/s'.format(i))
-            #ax1.text(1.225,0.9+i/40.0,'{0:}: {1:5.2f}'.format(i,np.std(resid,ddof=1)),color='r')
-        plt.legend()
-        fig.savefig("vsini_{0:}.png".format(name))
-        fig.clf()
-        plt.close()
-
-
 def radial_velocity(wv_obj,fx_obj,sig_obj,wv_std,fx_std,sig_std,obj_name,std_name,rv_std,rv_std_err,order,xcorr_width,cut,cutstart,cutend):
+
+# The more random iterations, the better... but it takes longer
+n_iter = 1000
 
 # Step 1: Fix the spectra:
 # * Select only the region in which they overlap
@@ -243,7 +195,7 @@ def radial_velocity(wv_obj,fx_obj,sig_obj,wv_std,fx_std,sig_std,obj_name,std_nam
         axv.plot(relationx,relationy)
         #ax.text(70,100,"{0:} {1:} {2:} {3:} {4:}".format(vsinicoeff))
 
-# 3. Cross-correlate the data, using 5000 trials:
+# 3. Cross-correlate the data, using n_iter trials:
 #  * Generate two random gaussian noises scaled to the uncertainty on the fluxes
 #  * Apply those gaussian noises to the standard and target stars
 #  * Cross-correlate the standard and target stars
@@ -251,16 +203,16 @@ def radial_velocity(wv_obj,fx_obj,sig_obj,wv_std,fx_std,sig_std,obj_name,std_nam
 #  * Set up gaussian
 #  * Fit gaussian to that center part
 #  * Save fitted parameters (pixel shift aka mean of gaussian, width aka stddev of gaussian)
-#  * Repeat 5000 times
+#  * Repeat n_iter times
 
 # Cross correlation loop -------------------------------- 
-	pix_shift=np.zeros(5000)	#initialize array for pixel shift values
-	pix_width=np.zeros(5000)	#initialize array for pixel width values
+	pix_shift=np.zeros(n_iter)	#initialize array for pixel shift values
+	pix_width=np.zeros(n_iter)	#initialize array for pixel width values
 	l = 0
 
 
         # using the xrange generator rather than making a full list saves memory
-        for l in xrange(5000):
+        for l in xrange(n_iter):
             # prepare the randomized data
             # GETTING ARRAYS READY FOR CROSS CORRELATION
 
@@ -424,7 +376,9 @@ def radial_velocity(wv_obj,fx_obj,sig_obj,wv_std,fx_std,sig_std,obj_name,std_nam
         wv_rvcorr_obj=wv_arr_std * (1 - rv_meas/(2.99792458*10**5))
 
         ## 5. Create plots --------------------------------- 
-# Plot object and standard so you can clearly see that shift exists --------------------------------
+        # The plots are the only reason find_rv.py needs to know the names of either star, or the RV of the standard.
+        
+        # Plot object and standard so you can clearly see that shift exists --------------------------------
 	fig = plt.figure(1)
 	
         # AR 2013.0703 Regularize the spectra for display purposes in the final graph
