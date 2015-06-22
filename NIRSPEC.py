@@ -1,11 +1,7 @@
 import math
 import numpy
-import scipy
-import random
 import find_rv
-from astrolibpy.astrolib import baryvel
 from astropy.io import ascii
-from astropy.io import fits
 from astropy import coordinates
 from astropy import time
 from astropy import units
