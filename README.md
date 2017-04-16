@@ -8,18 +8,23 @@ It assumes all input data has been corrected for heliocentric/barycentric radial
 It is:
 * Wavelength-independent (but the wavelength ranges for the object, and the RV standard, must match or at least overlap - it has been used on Optical and NIR data)
 * Resolution-independent (it has been successfully used on datasets with R=5000 (SALT Red Side Spectrograph) and R=50,000 (Magellan MIKE))
-* Unit independent (seriously... it computes the kilometers-per-second-per-pixel based on the input data, so it can handle data in Angstroms and Microns)
+* Unit independent (it computes the kilometers-per-second-per-pixel based on the input data, so it can handle data in Angstroms and Microns)
 * Fits on both bands and lines. In general, it is most sensitive to spectral lines, so make sure all cosmic rays are removed.
  * And therefore all objects should be paired up with RV standards of a similar spectral type, so the lines and bands in both spectra are close to the same.
 FINAL NOTE: The radial velocity uncertainties output from this code only relate to the noise in the spectra. There are other sources of error (wavelength calibration errors, for instance) that affect the spectra. It is highly recommended to take a weighted mean of multiple different runs (different standards, different spectra of the target star, different orders if the spectra are from an echelle) to get the TRUE radial velocity uncertainty.
+
+#############
+## Update
+#############
+find_rv_outliers.py will now run until 1000 iterations have been generated within set limits, for use with noisy spectra where some of the crossmatches are clearly unphysical outliers. This is an update to the older version that would simply remove everything outside those limits and calculate based on a smaller number of points.
 
 ##################################
 How to use:
 ##################################
 
-import find_rv.py, and then run find_rv.radial_velocity with the following arguments:
+import find_rv_outliers.py, and then run find_rv_outliers.radial_velocity with the following arguments:
 
-find_rv.radial_velocity(wavelength_object,flux_object,uncertainty_object, # spectral data on your target (uncertainty is NOT SNR)
+find_rv_outliers.radial_velocity(wavelength_object,flux_object,uncertainty_object, # spectral data on your target (uncertainty is NOT SNR)
               wavelength_standard,flux_standard,uncertainty_standard, # spectral data on a star with known RV, in the same (or at least overlapping) wavelength region
               name_obj,name_standard, # their names, for the plots (see point 2 below for details)
               rv_standard,rv_uncertainty_std, # the radial velocity of the standard, for the plots
@@ -41,7 +46,7 @@ How it works:
 ######################################
 Point 1:
 
-Main operation of find_rv.radial_velocity involves:
+Main operation of find_rv_outliers.radial_velocity involves:
 1. Constructing a new wavelength array based on the overlap between the two spectra, at 10x input resolution
 2. Interpolating both input datasets onto that wavelength array
 3. In a loop for N monte carlo tries:
@@ -67,6 +72,10 @@ Occasionally, when the SNR of a spectrum is low, the cross-correlation function 
 If you set the last three arguments in find_rv.radial_velocity to 1,minimum_pixel_shift,maximum_pixel_shift, you can force the final gaussian fit (step 10) to ignore all values outside those boundaries, isolating just the good RVs. 
 USE THIS OPTION SPARINGLY AND WITH CARE. If misused, you could theoretically force the output RV to be whatever you wanted.
 
+find_rv_outliers.py will force the program to keep running until 1000 points are generated within the range [minimum_pixel_shift,maximum_pixel_shift] and should produce more robust results if such a restriction is necessary.
+
 Point 5:
 Both NIRSPEC.py and FIRE.py use the 'crop flag' to trim outliers from a spectrum. If you set 'crop flag' to 1, any points more than 3 standard deviations from the mean of the spectrum will be removed, prior to the arrays being sent to find_rv.radial_velocity. 
 USE THIS OPTION WITH CARE: This could remove actual useful data from a spectrum that has deep features or lines. It's probably better to write your own more clever routine to remove outliers. Or do it by hand.
+
+
