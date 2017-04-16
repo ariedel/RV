@@ -303,7 +303,8 @@ def radial_velocity(wv_obj,fx_obj,sig_obj,wv_std,fx_std,sig_std,obj_name,std_nam
         
         amp = np.exp(lnamp)
         
-        print_num=len(pix_shift)%100
+        #print_num=len(pix_shift)%100
+        print_num=l%100
         if print_num == 0:
             ## Uncomment the following to make a plot every 500 fits.
             #fig = plt.figure(l)
@@ -319,7 +320,7 @@ def radial_velocity(wv_obj,fx_obj,sig_obj,wv_std,fx_std,sig_std,obj_name,std_nam
                 #fig.savefig(figname)
             #fig.clf()
             #plt.close()
-            print "amp={0: 12.4f}  mu={1: 10.4f}  sig={2: 9.4f}  sky={3: 11.4f}  sky2={4: 8.4f}".format(amp,mean,sig,sky,sky2)
+            print "amp={0: 12.4f}  mu={1: 10.4f}  sig={2: 9.4f}  sky={3: 11.4f}  sky2={4: 8.4f} n_entries={5:}".format(amp,mean,sig,sky,sky2,len(pix_shift))
             
         l += 1
         if (cut==0) | (mean > np.float(cutstart)) & (mean < np.float(cutend)):
