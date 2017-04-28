@@ -2,25 +2,20 @@
 # encoding: utf-8
 """
 find_rv.py
-
 Created by Vivienne Baldassare on 2012-03-30.
 Copyright (c) 2012 __MyCompanyName__. All rights reserved.
-
 Description: 
 	This code finds the radial velocity of a target when supplied with data for the target and data for a standard object
 	whose radial velocity is known.
-
 Usage:
 	Note: Data is not corrected for heliocentric velocities.
 	
 	Inputs:
 		wv_obj, fx_obj, and sig_obj are arrays containing data for the the wavelength, flux, and flux uncertainty of the target.
 		wv_std, fx_std, and sig_std are arrays containing data for the the wavelength, flux, and flux uncertainty of the standard.
-
 	Example:
 		>>> import find_rv
 		>>> find_rv.radial_velocity(wv_obj,fx_obj,sig_obj,wv_std,fx_std,sig_std,rv_std,rv_std_err,obj_name,std_name)
-
 """
 
 from array import array
@@ -273,8 +268,8 @@ def radial_velocity(wv_obj,fx_obj,sig_obj,wv_std,fx_std,sig_std,obj_name,std_nam
         xmid = np.argmax(ycorr)
         ymax = np.max(ycorr)
         # now take just the portion of the array that matters
-        xcorr_min=xmid-xcorr_width
-        xcorr_max=xmid+xcorr_width
+        xcorr_min=int(xmid-xcorr_width)
+        xcorr_max=int(xmid+xcorr_width)
         ycorr1=ycorr[xcorr_min:xcorr_max]	#isolate section of array with gaussian
         xcorr1=xcorr[xcorr_min:xcorr_max]       #isolate the same section of the pixel range
         ycorr2=ycorr[xcorr_min-50:xcorr_max+50]
@@ -440,4 +435,3 @@ def radial_velocity(wv_obj,fx_obj,sig_obj,wv_std,fx_std,sig_std,obj_name,std_nam
     
     #END RADIAL VELOCITY FUNCTION -----------------------------------------
     return rv_meas,rv_meas_err
-	
